@@ -8,25 +8,32 @@ const ActionCable = ActionCableNs;
 export class Cable {
   baseCable: any;
   private disconnectedSource: Subject<any> = new Subject();
+  private _cableBuilt : Promise<void>;
 
   constructor(public url: string, public params?: any) {
-    this.baseCable = ActionCable.createConsumer(this.buildUrl(url, params));
-
-    // If a function is passed as params, re-evaluate it before attempting to reconnect
-    if (params instanceof Function) {
-      this.disconnected().subscribe(() => {
-        this.baseCable.url = ActionCable.createWebSocketURL(this.buildUrl(url, params));
-      });
-    }
+    this._cableBuilt = this.buildUrl(url, params).then(_url => {
+      this.baseCable = ActionCable.createConsumer(_url);
+      // If a function is passed as params, re-evaluate it before attempting to reconnect
+      if (params instanceof Function) {
+        this.disconnected().subscribe(() => {
+          this.buildUrl(url, params).then(url => {
+            this.baseCable.url = ActionCable.createWebSocketURL(url);
+          })
+        });
+      }
+      return;
+    });
   }
 
   /**
    * Create a new subscription to a channel, optionally with topic parameters.
    */
-  channel(name: string, params = {}): Channel {
-    const channel = new Channel(this, name, params);
-    channel.disconnected().subscribe(data => this.disconnectedSource.next(data));
-    return channel;
+  channel(name: string, params = {}): Promise<Channel> {
+    return this._cableBuilt.then(()=>{
+      const channel = new Channel(this, name, params);
+      channel.disconnected().subscribe(data => this.disconnectedSource.next(data));
+      return channel;
+    })
   }
 
   /**
@@ -43,9 +50,12 @@ export class Cable {
     this.baseCable.disconnect();
   }
 
-  protected buildUrl(url: string, params?: any): string {
+  protected async buildUrl(url: string, params?: any): Promise<string> {
     if (params instanceof Function) {
       params = params();
+      if (params instanceof Promise) {
+        params = await params;
+      }
     }
 
     if (!params) {

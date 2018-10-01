@@ -1,12 +1,12 @@
 {
   "name": "angular2-actioncable",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Simple and flexible integration for ActionCable and Angular2/4/5+ applications",
   "main": "angular2-actioncable.js",
   "scripts": {
     "build": "ng-packagr"
   },
-  "repository": "nolancaster/angular2-actioncable",
+  "repository": "bananabr/angular2-actioncable",
   "keywords": [
     "actioncable",
     "angular",
@@ -33,6 +33,12 @@
     "name": "Nolan Lancaster",
     "email": "nolancaster@gmail.com"
   },
+  "contributors": [
+    {
+      "name": "Daniel Santos",
+      "email": "danielberredo@gmail.com"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
     "actioncable": "^5.1.4"
